@@ -85,6 +85,17 @@ function test(id){
     id.classList.remove("blank");
 }
 
+function clickEvent(td, which){
+    if (which == 1){
+        td.classList.add("shown");
+        td.classList.remove("blank");
+    } 
+    else if (which ==3){
+        td.classList.add("flag");
+        // td.classList.remove("blank");
+    }
+}
+
 function newGame(){
     let game = setup(16,30,100);
 
@@ -98,11 +109,27 @@ function newGame(){
             var td = createNode("td", tr);
             td.textContent = game[i][j].value;
             td.id= "rc" + i+""+j;
-            console.log(td.id)
+            
             let argument = td.id;
-            console.log(argument);
+            // console.log(argument);
             td.classList.add("blank");
-            td.setAttribute("onclick", "test("+ argument + ")");
+
+            td.onmousedown = function(e){
+                clickEvent(getByID(argument), e.which);
+                // e.preventDefault();
+                // console.log(e.which);
+                // console.log(e);
+            }
+            
+            // td.setAttribute("onclick", "test("+ argument + ")");
+            // td.setAttribute("onclick", function ne(e){
+            //     console.log(e.which);
+            // });
+
+            // td.setAttribute("onclick", function(event){
+            //     if (event.which ==3) alert("hello");
+            // })
+            // td.onmousedown = clickEvent(event);
         }
     }
 
@@ -111,6 +138,13 @@ function newGame(){
 
 window.onload=function(){
     // console.log(document.getElementById("container"))
-    
+  
+    window.oncontextmenu = function (){
+        return false;
+    } 
+    var header = this.getByID("hello");
+    header.onclick = function(event){
+        console.log(event.which);
+    }
     newGame();
 }
