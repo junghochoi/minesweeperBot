@@ -1,6 +1,7 @@
 var row;
 var col;
 var numBombs;
+var game;
 var omniDirection = [
     {x:0, y:-1}, 
     {x:0, y:1}, 
@@ -79,25 +80,70 @@ function setup(r,c,b){
     return table;
 }
 
+function numToString(value){
+    if(value==0) return "zero";
+    else if(value==1) return"one";
+    else if(value==2) return"two";
+    else if(value==3) return"three";
+    else if(value==4) return"four";
+    else if(value==5) return"five";
+    else if(value==6) return"six";  
+    else if(value==7) return"seven";
+    else if(value==8) return"eight";
+    return NaN;
+}
+
 function test(id){
     // For some reason this gives the element
     id.classList.add("shown");
     id.classList.remove("blank");
 }
 
+function revealBoard(){
+    for(var row = 0; row < game.length; row++){
+        for (var col=0; col < game[row].length; col++){
+            let td = getByID(row +"_"+col);
+            td.classList.add("shown");
+            td.classList.remove("blank");
+            if(game[row][col].value=="B") td.classList.add("bomb");
+            else td.classList.add(numToString(game[row][col].value));
+        }
+    }
+}
+
 function clickEvent(td, which){
-    if (which == 1){
+    if (which == 1 && td.classList.contains("blank")){
+
         td.classList.add("shown");
         td.classList.remove("blank");
+        console.log(td.id);
+        console.log(td.id.split("_"))
+
+        var coords = td.id.split("_");
+        var row = Number(coords[0]);
+        var col = Number(coords[1]);
+
+        console.log(game[row][col].value);
+        if(game[row][col].value=="B") td.classList.add("bomb");
+        else td.classList.add(numToString(game[row][col].value));
     } 
-    else if (which ==3){
-        td.classList.add("flag");
-        // td.classList.remove("blank");
+    else if (which ==3 && !td.classList.contains("shown")){
+
+        if (td.classList.contains("blank")){
+            td.classList.add("flag");
+            td.classList.remove("blank");
+        }
+
+        else if (td.classList.contains("flag")){
+            td.classList.add("blank");
+            td.classList.remove("flag");
+        }
+
     }
 }
 
 function newGame(){
-    let game = setup(16,30,100);
+    game = setup(16,30,100);
 
     var gameContainer = document.getElementById("container");
     console.log(gameContainer);
@@ -107,29 +153,19 @@ function newGame(){
         var tr = createNode("tr", gameTable);
         for(var j = 0; j < game[i].length; j++){
             var td = createNode("td", tr);
-            td.textContent = game[i][j].value;
-            td.id= "rc" + i+""+j;
+            // td.textContent = game[i][j].value;
+
+            td.id= i+"_"+j;
             
             let argument = td.id;
-            // console.log(argument);
+
             td.classList.add("blank");
 
             td.onmousedown = function(e){
                 clickEvent(getByID(argument), e.which);
-                // e.preventDefault();
-                // console.log(e.which);
-                // console.log(e);
-            }
-            
-            // td.setAttribute("onclick", "test("+ argument + ")");
-            // td.setAttribute("onclick", function ne(e){
-            //     console.log(e.which);
-            // });
 
-            // td.setAttribute("onclick", function(event){
-            //     if (event.which ==3) alert("hello");
-            // })
-            // td.onmousedown = clickEvent(event);
+            }
+
         }
     }
 
@@ -142,9 +178,6 @@ window.onload=function(){
     window.oncontextmenu = function (){
         return false;
     } 
-    var header = this.getByID("hello");
-    header.onclick = function(event){
-        console.log(event.which);
-    }
+   
     newGame();
 }
