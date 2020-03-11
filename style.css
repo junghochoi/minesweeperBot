@@ -1,0 +1,22 @@
+.blank{
+    background-color: gray;;
+}
+.shown{
+    background-color: red;
+}
+
+table{
+    border-collapse: collapse;
+    border:1px black;
+    margin: 0 auto;
+
+}
+
+td{
+    border: 1px solid black;
+
+    width: 15px; 
+    height: 15px;
+  
+    text-align: center;
+}
