@@ -3,6 +3,10 @@
     background-repeat: cover;
 }
 
+.unclickable{
+    pointer-events:  none;
+}
+
 
 
 .blank{
@@ -48,6 +52,14 @@
 
 .bomb{
     background-image: url("sprites/bomb.jpg");
+    background-size: cover;
+}
+.redbomb{
+    background-image: url("sprites/redbomb.jpg");
+    background-size: cover;
+}
+.bombx{
+    background-image: url("sprites/bombx.jpg");
     background-size: cover;
 }
 .flag{

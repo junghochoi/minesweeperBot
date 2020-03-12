@@ -13,6 +13,7 @@ var omniDirection = [
     {x:-1, y:1}, 
     {x:1, y:-1} 
 ]
+var firstClick = true;
 
 
 // 
@@ -55,7 +56,7 @@ function numToString(value){
     else if(value==6) return"six";  
     else if(value==7) return"seven";
     else if(value==8) return"eight";
-    return NaN;
+    
 }
 
 function test(id){
@@ -65,40 +66,50 @@ function test(id){
 }
 
 function revealBoard(){
+    let flagTiles = document.getElementsByClassName("flag");
+    for(td of flagTiles){
+        
+        let coords = td.id.split("_");
+        let x = Number(coords[0]);
+        let y = Number(coords[1]);
+        if (game[x][y].value !="B") {
+            td.classList.remove("flag");
+            td.classList.add("bombx");
+        }
+    }
 
     for(var coords of bombCoords){
         let bRow = coords.x;
         let bCol = coords.y;
         let td = getByID(bRow + "_" + bCol);
         
+        
+        
+
+
+        
         td.classList.add("shown");
         td.classList.remove("blank");
         td.classList.add("bomb");
+        
+        
     }
-    // for(var row = 0; row < game.length; row++){
-    //     for (var col=0; col < game[row].length; col++){
-    //         let td = getByID(row +"_"+col);
-    //         td.classList.add("shown");
-    //         td.classList.remove("blank");
-    //         if(game[row][col].value=="B") td.classList.add("bomb");
-    //         else td.classList.add(numToString(game[row][col].value));
-    //     }
-    // }
+
+    getByID("container").classList.add("unclickable");
 }
 
-function notInFirstClick(bRow, bCol, firstclick){
+function bombInFirstArea(bRow, bCol, firstclick){
    
-    console.log(firstclick)
-    if (bRow == firstclick.x && bCol == firstclick.y)  return false;
+   
+    if (bRow == firstclick.x && bCol == firstclick.y)  return true;
     for(var dir of omniDirection){
-        if(bRow + dir.x == firstclick.x && bCol + dir.y == firstclick.y) return false;
+        if(bRow + dir.x == firstclick.x && bCol + dir.y == firstclick.y) return true;
     }
-    return true;
+    return false;
 }
 
 function setup(r,c,b, firstclick){
-
-    console.log("setup entered");
+    firstClick = false;
     col = c;
     row = r;
     bombs = b;
@@ -118,7 +129,7 @@ function setup(r,c,b, firstclick){
             bRow = Math.floor(Math.random()*row);
             bCol = Math.floor(Math.random()*col);
             bombCoords.push({x:bRow, y:bCol})
-        } while(table[bRow][bCol].value=="B"/* && notInFirstClick(bRow, bCol, firstclick)*/)
+        } while(table[bRow][bCol].value=="B" || bombInFirstArea(bRow, bCol, firstclick))
 
        
         
@@ -132,7 +143,7 @@ function setup(r,c,b, firstclick){
         }
     }
 
-    console.log(printTable(table));
+    // console.log(printTable(table));
 
     return table;
 
@@ -141,12 +152,12 @@ function setup(r,c,b, firstclick){
 
 
 function clickEvent(td, which){
-    console.log("Entered click function");
+    
     if (which == 1 && td.classList.contains("blank")){
 
         let tilesToInspect = [td];
         while(tilesToInspect.length>0){
-            console.log(tilesToInspect.length)
+   
             var tile = tilesToInspect.pop();
             var coords = tile.id.split("_");
             var r = Number(coords[0]);
@@ -160,6 +171,7 @@ function clickEvent(td, which){
                 
                 continue;
             } else if (game[r][c].value == "B"){
+                getByID(r+"_"+c).classList.add("redbomb");
                 revealBoard();
                 break;
             } else if (game[r][c].value == 0){
@@ -192,35 +204,43 @@ function clickEvent(td, which){
 }
 
 function newGame(numRows, numCols, numBombs){
-    game = setup(numRows, numCols, numBombs);
-
+    // game = setup(numRows, numCols, numBombs);
+    // var game;
     var gameContainer = document.getElementById("container");
-    console.log(gameContainer);
+    
     var gameTable = createNode("table", gameContainer);
     
 
+    
     for(var i = 0; i < numRows; i++){
         var tr = createNode("tr", gameTable);
         for(var j = 0; j < numCols; j++){
             var td = createNode("td", tr);
-            // td.textContent = game[i][j].value;
+
 
             td.id= i+"_"+j;
             
             let argument = td.id;
+            let xCoord = i;
+            let yCoord = j;
 
             td.classList.add("blank");
 
+           
             td.onmousedown = function(e){
-            
-                // setup(numRows, numCols, numBombs, {x: i, y: j})
+               
+                if (firstClick){
+
+                    game = setup(numRows, numCols, numBombs, {x: xCoord, y:yCoord});
+                    
+                }
+                    
                 clickEvent(getByID(argument), e.which);
 
+                
             }
-
         }
     }
-
 }
 
 
@@ -228,14 +248,22 @@ function newGame(numRows, numCols, numBombs){
 
 
 window.onload=function(){
-    // console.log(document.getElementById("container"))
+    
   
     window.oncontextmenu = function (){
         return false;
     } 
+
+    
    
     let numRows = 16;
     let numCols = 30;
     let numBombs = 100;
+    // this.getByID("newgame").addEventListener("click", this.newGame(numRows, numCols, numBombs));
+
+    let start = new Date().getTime();
     newGame(numRows, numCols, numBombs);
+    let end = new Date().getTime();
+
+    console.log((end-start)/1000);
 }
