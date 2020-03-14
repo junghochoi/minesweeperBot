@@ -14,6 +14,9 @@ var omniDirection = [
     {x:1, y:-1} 
 ]
 var firstClick = true;
+var aiGrid;
+var shownBorderTiles;
+var hiddenBorderTiles;
 
 
 // 
@@ -27,6 +30,12 @@ function getByID(id){
     return element;
 }
 
+function rightclicker(){
+    $(getByID("hello")).trigger({
+        type:'mousedown',
+        which: 3
+    });
+}
 
 
 // ------------------------------------------------------
@@ -36,12 +45,17 @@ function printTable(table){
     let counter = 0;
     for (var i = 0; i < table.length; i++){
         for (var j = 0; j < table[i].length; j++){
-            if (table[i][j].value == "B") counter+=1;
-            t += " " + table[i][j].value;
+            
+            if(table[i][j].value == null){
+                t+= " " + table[i][j];
+            } else{
+                if (table[i][j].value == "B") counter+=1;
+                t += " " + table[i][j].value;
+            }
         }
         t+="\n";
     }
-    return t +"Counter: " + counter + "\n";
+    return t //+"Counter: " + counter + "\n";
 }
 function validCoordinate(r, c){
     return r >= 0 && c >=0 && r < row && c < col;
@@ -61,8 +75,10 @@ function numToString(value){
 
 function test(id){
     // For some reason this gives the element
-    id.classList.add("shown");
-    id.classList.remove("blank");
+    $(getByID("0_0")).trigger({
+        type: 'mousedown',
+        which: 3
+    });
 }
 
 function revealBoard(){
@@ -150,9 +166,77 @@ function setup(r,c,b, firstclick){
 
 }
 
+function landLocked(r, c){
+    for(var dir of omniDirection){
+        if ( validCoordinate(r+dir.x,c+dir.y) && aiGrid[r+dir.x][c+dir.y]=="-") {
+            
+            return false;
+        }
+    }
+    return true;
+}
+
+function updateShownBorders(addedTiles, removeTile){
+
+    for(var id of addedTiles){
+        shownBorderTiles.add(id);
+        hiddenBorderTiles.delete(id);
+        var coords = id.split("_");
+        var x = Number(coords[0]);
+        var y = Number(coords[1]);
+
+
+        for (var dir of omniDirection){
+            let newRow = x+dir.x;
+            let newCol = y+dir.y;
+            if(!validCoordinate(newRow,newCol)) continue;
+
+
+            if (landLocked(newRow, newCol) && aiGrid[newRow][newCol]!= 0){
+                console.log("LandLocked: " + newRow+"_"+newCol);
+                shownBorderTiles.delete(newRow+"_"+newCol); 
+            }
+        }
+    }
+
+    if (removeTile!=null){
+        shownBorderTiles.delete(removeTile);
+    } 
+    
+}
+
+
+function updateHiddenBorders(addedTiles, removeTile){
+    for(var tile of addedTiles){
+        let coords = tile.split("_");
+        let row = Number(coords[0]);
+        let col = Number(coords[1]);
+        for (var dir of omniDirection){
+            if (!validCoordinate(row+dir.x, col+dir.y)) continue;
+            if (aiGrid[row+dir.x][col+dir.y] == "-"){
+                hiddenBorderTiles.add((row+dir.x)+"_"+(col+dir.y));
+            }
+        }
+    }
+    if (removeTile!=null){
+        hiddenBorderTiles.add(removeTile);
+        let coords = removeTile.split("_");
+        let row = Number(coords[0]);
+        let col = Number(coords[1]);
+        for (var dir of omniDirection){
+            if (!validCoordinate(row+dir.x, col+dir.y)) continue;
+            if (aiGrid[row+dir.x][col+dir.y] == "-"){
+                hiddenBorderTiles.delete((row+dir.x)+"_"+(col+dir.y));
+            }
+        }
+    }
+}
 
 function clickEvent(td, which){
     
+    var addedTiles = new Set();
+    var removeTile = null;
+   
     if (which == 1 && td.classList.contains("blank")){
 
         let tilesToInspect = [td];
@@ -163,12 +247,15 @@ function clickEvent(td, which){
             var r = Number(coords[0]);
             var c = Number(coords[1]);
 
+            aiGrid[r][c] = game[r][c].value;
+            
             tile.classList.add("shown");
             tile.classList.add(numToString(game[r][c].value)); 
             tile.classList.remove("blank");
 
             if (game[r][c].value != 0 && game[r][c].value != "B"){
                 
+                addedTiles.add(tile.id);
                 continue;
             } else if (game[r][c].value == "B"){
                 getByID(r+"_"+c).classList.add("redbomb");
@@ -185,28 +272,52 @@ function clickEvent(td, which){
             }
             
         }
-        // 
+
 
     } 
     else if (which ==3 && !td.classList.contains("shown")){
 
+        var coords = td.id.split("_");
+        var r = Number(coords[0]);
+        var c = Number(coords[1]);
         if (td.classList.contains("blank")){
             td.classList.add("flag");
             td.classList.remove("blank");
+            addedTiles.add(td.id);
+            aiGrid[r][c] = "F";
         }
 
         else if (td.classList.contains("flag")){
             td.classList.add("blank");
             td.classList.remove("flag");
+            removeTile = td.id;
+            aiGrid[r][c] = "-";
         }
 
+        
+
     }
+
+    updateShownBorders(addedTiles, removeTile);
+    updateHiddenBorders(addedTiles, removeTile);
+    console.log(shownBorderTiles.values());
+    console.log(hiddenBorderTiles.values());
+    console.log(printTable(aiGrid))
 }
 
 function newGame(numRows, numCols, numBombs){
     // game = setup(numRows, numCols, numBombs);
     // var game;
+    
     var gameContainer = document.getElementById("container");
+    aiGrid = new Array(numRows);
+    shownBorderTiles = new Set();
+    hiddenBorderTiles = new Set();
+    for(var i = 0; i < numRows; i++){
+        aiGrid[i] = new Array(numCols);
+        aiGrid[i].fill("-");
+    }
+    console.log(aiGrid)
     
     var gameTable = createNode("table", gameContainer);
     
