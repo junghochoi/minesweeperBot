@@ -74,11 +74,8 @@ function numToString(value){
 }
 
 function test(id){
-    // For some reason this gives the element
-    $(getByID("0_0")).trigger({
-        type: 'mousedown',
-        which: 3
-    });
+   
+    console.log(bombCoords);
 }
 
 function revealBoard(){
@@ -114,17 +111,17 @@ function revealBoard(){
     getByID("container").classList.add("unclickable");
 }
 
-function bombInFirstArea(bRow, bCol, firstclick){
+function bombInFirstArea(bRow, bCol, firstCoords){
    
    
-    if (bRow == firstclick.x && bCol == firstclick.y)  return true;
+    if (bRow == firstCoords.x && bCol == firstCoords.y)  return true;
     for(var dir of omniDirection){
-        if(bRow + dir.x == firstclick.x && bCol + dir.y == firstclick.y) return true;
+        if(bRow + dir.x == firstCoords.x && bCol + dir.y == firstCoords.y) return true;
     }
     return false;
 }
 
-function setup(r,c,b, firstclick){
+function setup(r,c,b, firstCoords){
     firstClick = false;
     col = c;
     row = r;
@@ -144,9 +141,9 @@ function setup(r,c,b, firstclick){
         do {
             bRow = Math.floor(Math.random()*row);
             bCol = Math.floor(Math.random()*col);
-            bombCoords.push({x:bRow, y:bCol})
-        } while(table[bRow][bCol].value=="B" || bombInFirstArea(bRow, bCol, firstclick))
-
+            
+        } while(table[bRow][bCol].value=="B" || bombInFirstArea(bRow, bCol, firstCoords))
+        bombCoords.push({x:bRow, y:bCol})
        
         
 
@@ -159,7 +156,7 @@ function setup(r,c,b, firstclick){
         }
     }
 
-    // console.log(printTable(table));
+
 
     return table;
 
@@ -318,8 +315,7 @@ function clickEvent(td, which){
 }
 
 function newGame(numRows, numCols, numBombs){
-    // game = setup(numRows, numCols, numBombs);
-    // var game;
+
     
     var gameContainer = document.getElementById("container");
     aiGrid = new Array(numRows);
@@ -355,6 +351,7 @@ function newGame(numRows, numCols, numBombs){
                 if (firstClick){
 
                     game = setup(numRows, numCols, numBombs, {x: xCoord, y:yCoord});
+                    console.log(firstClick);
                     
                 }
                     
@@ -405,11 +402,17 @@ function printShownBorders(){
     // }
     // console.log(array);
 
-    for (id of shownBorderTiles){
-        let x = Number(id.split("_")[0]);
-        let y = Number(id.split("_")[1]);
-        if (landLocked(x,y)) console.log(getByID(id));
+    // for (id of shownBorderTiles){
+    //     let x = Number(id.split("_")[0]);
+    //     let y = Number(id.split("_")[1]);
+    //     if (landLocked(x,y)) console.log(getByID(id));
+    // }
+
+    var answer = new Array();
+    for (var id of hiddenBorderTiles){
+        answer.push(getByID(id));
     }
+    return answer;
 }
 function makeMove(){
 
@@ -474,6 +477,8 @@ function makeMove(){
         console.log("success");
     } else{
         console.log("fail");
+        console.log(printShownBorders());
+        
     }
 }
 
