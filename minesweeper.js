@@ -193,7 +193,7 @@ function updateShownBorders(addedTiles, removeTile){
 
 
             if (landLocked(newRow, newCol) && aiGrid[newRow][newCol]!= 0){
-                console.log("LandLocked: " + newRow+"_"+newCol);
+                // console.log("LandLocked: " + newRow+"_"+newCol);
                 shownBorderTiles.delete(newRow+"_"+newCol); 
             }
         }
@@ -234,6 +234,7 @@ function updateHiddenBorders(addedTiles, removeTile){
 
 function clickEvent(td, which){
     
+    // TODO: Some tiles aren't being removed fromt he borders array
     var addedTiles = new Set();
     var removeTile = null;
    
@@ -300,9 +301,9 @@ function clickEvent(td, which){
 
     updateShownBorders(addedTiles, removeTile);
     updateHiddenBorders(addedTiles, removeTile);
-    console.log(shownBorderTiles.values());
-    console.log(hiddenBorderTiles.values());
-    console.log(printTable(aiGrid))
+    // console.log(shownBorderTiles.values());
+    // console.log(hiddenBorderTiles.values());
+    // console.log(printTable(aiGrid))
 }
 
 function newGame(numRows, numCols, numBombs){
@@ -351,6 +352,100 @@ function newGame(numRows, numCols, numBombs){
                 
             }
         }
+    }
+}
+
+function flagsAround (row,col){
+
+    var flagCount = 0;
+    for(var dir of omniDirection){
+        var newRow = row +dir.x;
+        var newCol = col + dir.y;
+        if (!validCoordinate(newRow, newCol)) continue;
+        if (aiGrid[newRow][newCol] == "F") flagCount +=1;
+
+    }
+
+    return flagCount;
+
+}
+
+function freeSquaresAround(row, col){
+    var freeSpaces = new Array();
+    for(var dir of omniDirection){
+        var newRow = row +dir.x;
+        var newCol = col + dir.y;
+        if (!validCoordinate(newRow, newCol)) continue;
+        if (aiGrid[newRow][newCol] == "-") freeSpaces.push({row: newRow, col: newCol});
+
+    }
+
+    return freeSpaces;
+}
+
+function printShownBorders(){
+    var array = new Array();
+    for(var id of shownBorderTiles){
+        array.push(getByID(id))
+    }
+    console.log(array);
+}
+function makeMove(){
+
+    if (firstClick){
+        $(getByID("8_15")).trigger({
+            type:'mousedown',
+            which: 1
+        });
+        return;
+    }
+    let tilesToInspect = shownBorderTiles.values();
+    var success = false;
+    for(var id of tilesToInspect){
+        var coords = id.split("_");
+        var row = Number(coords[0]);
+        var col = Number(coords[1]);
+
+        var tileNum = aiGrid[row][col];
+        var flagNum = flagsAround(row, col);
+        var freeSpacesArr = freeSquaresAround(row, col);
+
+        
+
+        // Guarenteed Bombs
+        if (tileNum-flagNum == freeSpacesArr.length){
+            console.log("Guarented Bomb");
+            console.log(getByID(id));
+            console.log(landLocked(row,col)); 
+            for(var clickTile of freeSpacesArr){
+                var id = clickTile.row+"_"+clickTile.col;
+                $(getByID(id)).trigger({
+                    type:'mousedown',
+                    which: 3
+                });
+            }
+            success = true;
+        }
+
+
+        // Guarenteed Spaces
+        if (tileNum == flagNum && freeSpacesArr.length > 0){
+            
+            for(var clickTile of freeSpacesArr){
+                var id = clickTile.row+"_"+clickTile.col;
+                $(getByID(id)).trigger({
+                    type:'mousedown',
+                    which: 1
+                });
+            }
+            success= true;
+        }
+    }
+
+    if (success){
+        console.log("success");
+    } else{
+        console.log("fail");
     }
 }
 
