@@ -167,9 +167,11 @@ function setup(r,c,b, firstclick){
 }
 
 function landLocked(r, c){
+    
     for(var dir of omniDirection){
-        if ( validCoordinate(r+dir.x,c+dir.y) && aiGrid[r+dir.x][c+dir.y]=="-") {
-            
+        if (validCoordinate(r+dir.x,c+dir.y) && aiGrid[r+dir.x][c+dir.y]=="-") {
+            // console.log("landlocked function")
+            // console.log(aiGrid[r+dir.x][c+dir.y]);
             return false;
         }
     }
@@ -179,12 +181,18 @@ function landLocked(r, c){
 function updateShownBorders(addedTiles, removeTile){
 
     for(var id of addedTiles){
-        shownBorderTiles.add(id);
+
+
+        
         hiddenBorderTiles.delete(id);
         var coords = id.split("_");
         var x = Number(coords[0]);
         var y = Number(coords[1]);
+        
+        if(!landLocked(x,y) && aiGrid[x][y]!=0) shownBorderTiles.add(id);
 
+
+      
 
         for (var dir of omniDirection){
             let newRow = x+dir.x;
@@ -234,7 +242,7 @@ function updateHiddenBorders(addedTiles, removeTile){
 
 function clickEvent(td, which){
     
-    // TODO: Some tiles aren't being removed fromt he borders array
+    // TODO: Some tiles aren't being removed from the borders array
     var addedTiles = new Set();
     var removeTile = null;
    
@@ -263,12 +271,15 @@ function clickEvent(td, which){
                 revealBoard();
                 break;
             } else if (game[r][c].value == 0){
+                addedTiles.add(tile.id);
                 for (var dir of omniDirection){
                     let newRow = r + dir.x;
                     let newCol = c + dir.y;
-                    let newTD = getByID(newRow+"_"+newCol)
-                    if (validCoordinate(newRow, newCol) && !newTD.classList.contains("shown"))
+                    let newTD = getByID(newRow+"_"+newCol);
+                    if (validCoordinate(newRow, newCol))
+                    if (!newTD.classList.contains("shown"))
                         tilesToInspect.push(newTD);
+                    
                 }
             }
             
@@ -384,11 +395,21 @@ function freeSquaresAround(row, col){
 }
 
 function printShownBorders(){
-    var array = new Array();
-    for(var id of shownBorderTiles){
-        array.push(getByID(id))
+ 
+    // var array = new Array();
+    // for(var id of shownBorderTiles){
+    //     let x = Number(id.split("_")[0]);
+    //     let y = Number(id.split("_")[1]);
+        
+    //     array.push(getByID(id))
+    // }
+    // console.log(array);
+
+    for (id of shownBorderTiles){
+        let x = Number(id.split("_")[0]);
+        let y = Number(id.split("_")[1]);
+        if (landLocked(x,y)) console.log(getByID(id));
     }
-    console.log(array);
 }
 function makeMove(){
 
@@ -399,6 +420,8 @@ function makeMove(){
         });
         return;
     }
+
+    printShownBorders();
     let tilesToInspect = shownBorderTiles.values();
     var success = false;
     for(var id of tilesToInspect){
@@ -413,10 +436,11 @@ function makeMove(){
         
 
         // Guarenteed Bombs
-        if (tileNum-flagNum == freeSpacesArr.length){
-            console.log("Guarented Bomb");
-            console.log(getByID(id));
-            console.log(landLocked(row,col)); 
+        if (tileNum-flagNum == freeSpacesArr.length && tileNum-flagNum != 0){
+            // console.log("Guarented Bomb");
+            // console.log(getByID(id));
+            // console.log(landLocked(row,col)); 
+            if (landLocked(row,col)) getByID("print").classList.add("unclickable");
             for(var clickTile of freeSpacesArr){
                 var id = clickTile.row+"_"+clickTile.col;
                 $(getByID(id)).trigger({
@@ -425,6 +449,7 @@ function makeMove(){
                 });
             }
             success = true;
+            // return;
         }
 
 
@@ -439,8 +464,11 @@ function makeMove(){
                 });
             }
             success= true;
+            // return;
         }
     }
+
+
 
     if (success){
         console.log("success");
@@ -460,7 +488,11 @@ window.onload=function(){
         return false;
     } 
 
-    
+    // document.onkeydown = function(e){
+    //     e = e || window.event;
+        
+    //     printShownBorders();
+    // }
    
     let numRows = 16;
     let numCols = 30;
