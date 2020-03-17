@@ -90,3 +90,7 @@ td{
     font-size: 8px;
     text-align: center;
 }
+
+#ai:active{
+    color: red;
+}

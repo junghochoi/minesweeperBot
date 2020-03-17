@@ -23,6 +23,18 @@ var hiddenBorderTiles;
 Array.prototype.clone = function() {
 	return this.slice(0);
 };
+function leftClickTile(id){
+    $(getByID(id)).trigger({
+        type:'mousedown',
+        which: 1
+    });
+}
+function rightClickTile(id){
+    $(getByID(id)).trigger({
+        type:'mousedown',
+        which: 3
+    });
+}
 function createNode(type, parent){
     var newNode = document.createElement(type);
     parent.appendChild(newNode);
@@ -328,7 +340,7 @@ function newGame(numRows, numCols, numBombs){
         aiGrid[i] = new Array(numCols);
         aiGrid[i].fill("-");
     }
-    console.log(aiGrid)
+    
     
     var gameTable = createNode("table", gameContainer);
     
@@ -354,7 +366,7 @@ function newGame(numRows, numCols, numBombs){
                 if (firstClick){
 
                     game = setup(numRows, numCols, numBombs, {x: xCoord, y:yCoord});
-                    console.log(firstClick);
+                    
                     
                 }
                     
@@ -420,10 +432,7 @@ function printShownBorders(){
 function makeMove(){
 
     if (firstClick){
-        $(getByID("8_15")).trigger({
-            type:'mousedown',
-            which: 1
-        });
+        leftClickTile("8_15");
         return;
     }
 
@@ -449,10 +458,8 @@ function makeMove(){
             if (landLocked(row,col)) getByID("print").classList.add("unclickable");
             for(var clickTile of freeSpacesArr){
                 var id = clickTile.row+"_"+clickTile.col;
-                $(getByID(id)).trigger({
-                    type:'mousedown',
-                    which: 3
-                });
+                rightClickTile(id);
+
             }
             success = true;
             // return;
@@ -464,10 +471,8 @@ function makeMove(){
             
             for(var clickTile of freeSpacesArr){
                 var id = clickTile.row+"_"+clickTile.col;
-                $(getByID(id)).trigger({
-                    type:'mousedown',
-                    which: 1
-                });
+                leftClickTile(id);
+ 
             }
             success= true;
             // return;
@@ -482,8 +487,22 @@ function makeMove(){
         console.log("fail");
         // console.log(printShownBorders());
         // randomMove();
-        findProabilities();
-        // tankSolver();
+        var probability = findProabilities();
+    
+        var foundSmallestProbability = false;
+        var minBombs = Math.min(...Object.values(probability));
+
+        for (var id in probability){
+            if (probability[id] == minBombs){
+                
+
+                leftClickTile(id);
+                if (minBombs != 0) break;
+            }
+        }
+
+      
+
         
     }
 }
@@ -625,50 +644,41 @@ function tankSolver(){
         }
     }
 
-    console.log(solutions);
+
+    return solutions;
     
 }
-// function cutoffSection(r,c){
-//     let flags = new Array();
-//     for (var dir of omniDirection){
-//         if (aiGrid[r+dir.x][y+dir.y] == "F"){
-//             flags.push({row: r+dir.x, y:c+dir.y})
-//         }
-//     }
-//     if (flags < 2) return false;
-
-
-// }
-
-function isCorner(r,c){
-    return validCoordinate(r+1, c+1) && aiGrid[r+1][c+1] > 0 || validCoordinate(r+1, c-1) && aiGrid[r+1][c-1] > 0 ||validCoordinate(r-1, c+1) && aiGrid[r-1][c+1] > 0 ||validCoordinate(r-1, c-1) && aiGrid[r-1][c-1] > 0; 
-}
+/*
+Copy and Paste if it does not work
 function addConnected(section, hiddenBorders, row, col){
     section.push(row+"_"+col);
 
     for (var dir of omniDirection){
-        let newRow = row+dir.x;
-        let newCol = row+dir.y;
-        let newID = newRow+"_"+newCol;
-        if (!section.includes(newID) && hiddenBorders.includes(newID)){
-            addConnected(section, hiddenBorders, newRow, newCol);
-            
-        }
-    }
-    // for (hiddenTile of hiddenBorders){
-    //     if (!section.includes(hiddenTile)){
-    //         let r = Number(hiddenTile.split("_")[0]);
-    //         let c = Number(hiddenTile.split("_")[1]);
+        var newRow = row + dir.x;
+        var newCol = col + dir.y;
+        var newTD = newRow+"_"+newCol;
 
-    //         if (getNumTiles(r,c).length < 2 && !isCorner(r,c) ) continue;
-    //         else{
-    //             addConnected(section, hiddenBorders, r, c,);
-    //             break;
-    //         }
-           
-            
-    //     }
-    // }
+        if (hiddenBorders.includes(newTD) && !section.includes(newTD)){
+            addConnected(section, hiddenBorders, newRow, newCol)
+        }
+
+    }
+    
+}
+*/
+function addConnected(section, hiddenBorders, row, col){
+    section.push(row+"_"+col);
+
+    for (var dir of omniDirection){
+        var newRow = row + dir.x;
+        var newCol = col + dir.y;
+        var newTD = newRow+"_"+newCol;
+
+        if (hiddenBorders.includes(newTD) && !section.includes(newTD)){
+            addConnected(section, hiddenBorders, newRow, newCol)
+        }
+
+    }
     
 }
 
@@ -692,7 +702,7 @@ function sectionDivide(hiddenBorders){
             let c = Number(hiddenTile.split("_")[1]);
             if (getNumTiles(r,c).length == 0) continue;
             let partition =  new Array();
-            addConnected(partition, hiddenBorders, r, c)
+            addConnected(partition, hiddenBorders, r, c, -1,-1)
             sections.push(partition);
         }
     }
@@ -702,20 +712,30 @@ function sectionDivide(hiddenBorders){
 function findProabilities(){
     let sections = sectionDivide(Array.from(hiddenBorderTiles));
     console.log(sections);
-    probability ={}
+    probability = {}
     for (tileid of hiddenBorderTiles){
         probability[tileid] = 0;
     }
 
-    // for (var sec of sections){
-    //     var partialSolution = tankSolver(sec);
-    //     for (var solutionBombs of partialSolution){
-    //         for (var bombTile of solutionBombs){
-    //             probability[bombTile] += 1;
-    //         }
-    //     }
-    // }
-    console.log(probability);
+    for (var sec of sections){
+        // if (sec.length > 24) {
+        //     randomMove(sec);
+        //     break;
+        // }
+        console.log(sec);
+        let start = new Date().getTime();
+        var partialSolution = tankSolver(sec);
+        let end = new Date().getTime();
+        console.log((end-start)/1000);
+        
+        for (var solutionBombs of partialSolution){
+            for (var bombTile of solutionBombs){
+                probability[bombTile] += 1;
+            }
+        }
+    }
+    
+    return probability
 }
 
 
@@ -727,11 +747,7 @@ function randomMove(){
         break;
     }
         
-    console.log(randomTileID);
-    $(getByID(randomTileID)).trigger({
-        type:'mousedown',
-        which: 1
-    });
+    leftClickTile(randomTileID);
 }
 
 
@@ -759,5 +775,5 @@ window.onload=function(){
     newGame(numRows, numCols, numBombs);
     let end = new Date().getTime();
 
-    console.log((end-start)/1000);
+    // console.log((end-start)/1000);
 }
