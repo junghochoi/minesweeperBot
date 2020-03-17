@@ -20,6 +20,9 @@ var hiddenBorderTiles;
 
 
 // 
+Array.prototype.clone = function() {
+	return this.slice(0);
+};
 function createNode(type, parent){
     var newNode = document.createElement(type);
     parent.appendChild(newNode);
@@ -477,11 +480,259 @@ function makeMove(){
         console.log("success");
     } else{
         console.log("fail");
-        console.log(printShownBorders());
+        // console.log(printShownBorders());
+        // randomMove();
+        findProabilities();
+        // tankSolver();
         
     }
 }
 
+
+
+
+
+function getNumTiles(r,c){
+    let numTileArray = new Array()
+    for(var dir of omniDirection){
+        var newRow = r + dir.x;
+        var newCol = c + dir.y;
+        if (!validCoordinate(newRow, newCol)) continue;
+        if(aiGrid[newRow][newCol] >0 && aiGrid[newRow][newCol] <=8){
+            numTileArray.push(newRow+"_"+newCol);
+        }
+    }
+
+    return numTileArray;
+
+}
+
+
+function getTotalFlags(r,c, virtualBombs){
+    let totalFlags = 0;
+    for(var dir of omniDirection){
+        var newRow = r + dir.x;
+        var newCol = c + dir.y;
+        if (!validCoordinate(newRow, newCol)) continue;
+        if(aiGrid[newRow][newCol] == "F" || virtualBombs.includes(newRow+"_"+newCol)){
+            totalFlags+=1;
+        }
+    }
+
+    return totalFlags;
+}
+
+function getTotalFreeSpaces(r,c,virtualBombs){
+    let totalSpaces = 0;
+    for(var dir of omniDirection){
+        var newRow = r + dir.x;
+        var newCol = c + dir.y;
+        if (!validCoordinate(newRow, newCol)) continue;
+        if(aiGrid[newRow][newCol] == "-" && !virtualBombs.includes(newRow+"_"+newCol)){
+            totalSpaces+=1;
+        }
+    }
+
+    return totalSpaces;
+}
+
+function isSolution(possibleBombs, hiddenBorders){
+
+    
+    for (var hiddenID of hiddenBorders){
+        let hCoords = hiddenID.split("_");
+        let hRow = Number(hCoords[0]);
+        let hCol = Number(hCoords[1]);
+
+
+        let neighborNumTiles = getNumTiles(hRow, hCol);
+        for (var numTile of neighborNumTiles){
+            let numCoords = numTile.split("_");
+            let numRow = Number(numCoords[0]);
+            let numCol = Number(numCoords[1]);
+            let num = aiGrid[numRow][numCol];
+
+            
+            let totalFlags = getTotalFlags(numRow, numCol, possibleBombs);
+            // let totalFreeSpaces = getTotalFreeSpaces(numRow, numCol, possibleBombs);
+    
+            if (totalFlags!=num) return false;
+        }
+    }
+    return true;
+    
+}
+
+function isViolation(possibleBombs){
+    for (var bombID of possibleBombs){
+        let bCoords = bombID.split("_");
+        let bRow = Number(bCoords[0]);
+        let bCol = Number(bCoords[1]);
+
+
+        let neighborNumTiles = getNumTiles(bRow, bCol);
+        for (var numTile of neighborNumTiles){
+            let numCoords = numTile.split("_");
+            let numRow = Number(numCoords[0]);
+            let numCol = Number(numCoords[1]);
+            let num = aiGrid[numRow][numCol];
+
+            let totalFlags = getTotalFlags(numRow, numCol, possibleBombs);
+    
+            if (totalFlags>num) return true;
+        }
+    }
+    return false;
+}
+
+function tankSolver(){
+    let hiddenBorders = Array.from(hiddenBorderTiles);
+    var solutions = new Array();
+    
+    var states = new Array(); 
+    states.push({
+        possibleBombs: new Array(),
+        nextBombIndex: 0
+    });
+
+    // console.log(states.length)
+    while(states.length!=0){
+        let s = states.pop();
+        if (isSolution(s.possibleBombs, hiddenBorders)){
+            solutions.push(s.possibleBombs);
+        } else{
+            if (isViolation(s.possibleBombs)){
+                continue;
+            }
+            if (s.nextBombIndex >= hiddenBorders.length) continue;
+
+
+            
+            states.push({
+                possibleBombs: s.possibleBombs.clone(),
+                nextBombIndex: s.nextBombIndex+1
+            })
+
+            var nextArray = s.possibleBombs.clone();
+            nextArray.push(hiddenBorders[s.nextBombIndex]);
+        
+            states.push({
+                possibleBombs: nextArray,
+                nextBombIndex: s.nextBombIndex+1
+            });
+
+            
+        }
+    }
+
+    console.log(solutions);
+    
+}
+// function cutoffSection(r,c){
+//     let flags = new Array();
+//     for (var dir of omniDirection){
+//         if (aiGrid[r+dir.x][y+dir.y] == "F"){
+//             flags.push({row: r+dir.x, y:c+dir.y})
+//         }
+//     }
+//     if (flags < 2) return false;
+
+
+// }
+
+function isCorner(r,c){
+    return validCoordinate(r+1, c+1) && aiGrid[r+1][c+1] > 0 || validCoordinate(r+1, c-1) && aiGrid[r+1][c-1] > 0 ||validCoordinate(r-1, c+1) && aiGrid[r-1][c+1] > 0 ||validCoordinate(r-1, c-1) && aiGrid[r-1][c-1] > 0; 
+}
+function addConnected(section, hiddenBorders, row, col){
+    section.push(row+"_"+col);
+
+    for (var dir of omniDirection){
+        let newRow = row+dir.x;
+        let newCol = row+dir.y;
+        let newID = newRow+"_"+newCol;
+        if (!section.includes(newID) && hiddenBorders.includes(newID)){
+            addConnected(section, hiddenBorders, newRow, newCol);
+            
+        }
+    }
+    // for (hiddenTile of hiddenBorders){
+    //     if (!section.includes(hiddenTile)){
+    //         let r = Number(hiddenTile.split("_")[0]);
+    //         let c = Number(hiddenTile.split("_")[1]);
+
+    //         if (getNumTiles(r,c).length < 2 && !isCorner(r,c) ) continue;
+    //         else{
+    //             addConnected(section, hiddenBorders, r, c,);
+    //             break;
+    //         }
+           
+            
+    //     }
+    // }
+    
+}
+
+function sectionDivide(hiddenBorders){
+    var sections = new Array();
+
+    
+    for(var hiddenTile of hiddenBorders){
+
+        var alreadyInSection = false;
+        for (var i = 0; i < sections.length; i++){
+ 
+            if (sections[i].includes(hiddenTile)){
+                alreadyInSection = true;
+                break;
+            }
+        }
+
+        if(!alreadyInSection){
+            let r = Number(hiddenTile.split("_")[0]);
+            let c = Number(hiddenTile.split("_")[1]);
+            if (getNumTiles(r,c).length == 0) continue;
+            let partition =  new Array();
+            addConnected(partition, hiddenBorders, r, c)
+            sections.push(partition);
+        }
+    }
+    return sections;
+    
+}
+function findProabilities(){
+    let sections = sectionDivide(Array.from(hiddenBorderTiles));
+    console.log(sections);
+    probability ={}
+    for (tileid of hiddenBorderTiles){
+        probability[tileid] = 0;
+    }
+
+    // for (var sec of sections){
+    //     var partialSolution = tankSolver(sec);
+    //     for (var solutionBombs of partialSolution){
+    //         for (var bombTile of solutionBombs){
+    //             probability[bombTile] += 1;
+    //         }
+    //     }
+    // }
+    console.log(probability);
+}
+
+
+function randomMove(){
+    
+    var randomTileID; 
+    for(var tile of hiddenBorderTiles.values()){
+        randomTileID = tile;
+        break;
+    }
+        
+    console.log(randomTileID);
+    $(getByID(randomTileID)).trigger({
+        type:'mousedown',
+        which: 1
+    });
+}
 
 
 
@@ -501,7 +752,7 @@ window.onload=function(){
    
     let numRows = 16;
     let numCols = 30;
-    let numBombs = 100;
+    let numBombs = 99;
     // this.getByID("newgame").addEventListener("click", this.newGame(numRows, numCols, numBombs));
 
     let start = new Date().getTime();
