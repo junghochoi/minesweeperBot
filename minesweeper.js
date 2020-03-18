@@ -110,12 +110,7 @@ function revealBoard(){
         let bRow = coords.x;
         let bCol = coords.y;
         let td = getByID(bRow + "_" + bCol);
-        
-        
-        
 
-
-        
         td.classList.add("shown");
         td.classList.remove("blank");
         td.classList.add("bomb");
@@ -239,16 +234,18 @@ function updateHiddenBorders(addedTiles, removeTile){
         }
     }
     if (removeTile!=null){
-        hiddenBorderTiles.add(removeTile);
-        let coords = removeTile.split("_");
-        let row = Number(coords[0]);
-        let col = Number(coords[1]);
-        for (var dir of omniDirection){
-            if (!validCoordinate(row+dir.x, col+dir.y)) continue;
-            if (aiGrid[row+dir.x][col+dir.y] == "-"){
-                hiddenBorderTiles.delete((row+dir.x)+"_"+(col+dir.y));
-            }
-        }
+
+        hiddenBorderTiles.delete(removeTile);
+        // hiddenBorderTiles.add(removeTile);
+        // let coords = removeTile.split("_");
+        // let row = Number(coords[0]);
+        // let col = Number(coords[1]);
+        // for (var dir of omniDirection){
+        //     if (!validCoordinate(row+dir.x, col+dir.y)) continue;
+        //     if (aiGrid[row+dir.x][col+dir.y] == "-"){
+        //         hiddenBorderTiles.delete((row+dir.x)+"_"+(col+dir.y));
+        //     }
+        // }
     }
 }
 
@@ -307,7 +304,8 @@ function clickEvent(td, which){
         if (td.classList.contains("blank")){
             td.classList.add("flag");
             td.classList.remove("blank");
-            addedTiles.add(td.id);
+            // addedTiles.add(td.id);
+            removeTile = td.id;
             aiGrid[r][c] = "F";
         }
 
@@ -324,9 +322,9 @@ function clickEvent(td, which){
 
     updateShownBorders(addedTiles, removeTile);
     updateHiddenBorders(addedTiles, removeTile);
-    // console.log(shownBorderTiles.values());
-    // console.log(hiddenBorderTiles.values());
-    // console.log(printTable(aiGrid))
+
+    // console.log(hiddenBorderTiles);
+
 }
 
 function newGame(numRows, numCols, numBombs){
@@ -448,13 +446,9 @@ function makeMove(){
         var flagNum = flagsAround(row, col);
         var freeSpacesArr = freeSquaresAround(row, col);
 
-        
-
         // Guarenteed Bombs
         if (tileNum-flagNum == freeSpacesArr.length && tileNum-flagNum != 0){
-            // console.log("Guarented Bomb");
-            // console.log(getByID(id));
-            // console.log(landLocked(row,col)); 
+
             if (landLocked(row,col)) getByID("print").classList.add("unclickable");
             for(var clickTile of freeSpacesArr){
                 var id = clickTile.row+"_"+clickTile.col;
@@ -464,8 +458,6 @@ function makeMove(){
             success = true;
             // return;
         }
-
-
         // Guarenteed Spaces
         if (tileNum == flagNum && freeSpacesArr.length > 0){
             
@@ -604,8 +596,8 @@ function isViolation(possibleBombs){
     return false;
 }
 
-function tankSolver(){
-    let hiddenBorders = Array.from(hiddenBorderTiles);
+function tankSolver(section){
+    let hiddenBorders = section;
     var solutions = new Array();
     
     var states = new Array(); 
@@ -718,21 +710,19 @@ function findProabilities(){
     }
 
     for (var sec of sections){
-        // if (sec.length > 24) {
-        //     randomMove(sec);
-        //     break;
-        // }
+
         console.log(sec);
         let start = new Date().getTime();
-        var partialSolution = tankSolver(sec);
+        var partialSolution = tankSolver(sec.clone());
         let end = new Date().getTime();
         console.log((end-start)/1000);
-        
+
         for (var solutionBombs of partialSolution){
             for (var bombTile of solutionBombs){
                 probability[bombTile] += 1;
             }
         }
+
     }
     
     return probability
