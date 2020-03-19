@@ -208,7 +208,7 @@ function updateShownBorders(addedTiles, removeTile){
 
 
             if (landLocked(newRow, newCol) && aiGrid[newRow][newCol]!= 0){
-                // console.log("LandLocked: " + newRow+"_"+newCol);
+ 
                 shownBorderTiles.delete(newRow+"_"+newCol); 
             }
         }
@@ -251,7 +251,7 @@ function updateHiddenBorders(addedTiles, removeTile){
 
 function clickEvent(td, which){
     
-    // TODO: Some tiles aren't being removed from the borders array
+    
     var addedTiles = new Set();
     var removeTile = null;
    
@@ -322,9 +322,6 @@ function clickEvent(td, which){
 
     updateShownBorders(addedTiles, removeTile);
     updateHiddenBorders(addedTiles, removeTile);
-
-    // console.log(hiddenBorderTiles);
-
 }
 
 function newGame(numRows, numCols, numBombs){
@@ -477,13 +474,17 @@ function makeMove(){
         console.log("success");
     } else{
         console.log("fail");
-        // console.log(printShownBorders());
-        // randomMove();
-        var probability = findProabilities();
-    
-        var foundSmallestProbability = false;
-        var minBombs = Math.min(...Object.values(probability));
 
+        var probability = findProabilities();
+        
+
+        if (probability == null){
+            randomMove();
+            console.log("random Move Made")
+            return;
+        }
+        var minBombs = Math.min(...Object.values(probability)); 
+        console.log("Minimum bombs: " + minBombs);
         for (var id in probability){
             if (probability[id] == minBombs){
                 
@@ -703,19 +704,24 @@ function sectionDivide(hiddenBorders){
 }
 function findProabilities(){
     let sections = sectionDivide(Array.from(hiddenBorderTiles));
+    sections.sort(function(a,b){
+        return a.length - b.length;
+    });
     console.log(sections);
     probability = {}
-    for (tileid of hiddenBorderTiles){
-        probability[tileid] = 0;
-    }
+    
 
     for (var sec of sections){
-
+        if (sec.length > 24) return null;
+        for (tileid of sec){
+            probability[tileid] = 0;
+        }
         console.log(sec);
         let start = new Date().getTime();
         var partialSolution = tankSolver(sec.clone());
         let end = new Date().getTime();
         console.log((end-start)/1000);
+
 
         for (var solutionBombs of partialSolution){
             for (var bombTile of solutionBombs){
@@ -723,10 +729,18 @@ function findProabilities(){
             }
         }
 
-    }
+        for (var id in probability){
+            if (probability[id] == 0){
+                console.log("guarenteed free space found");
+                return probability;
+            } 
+        }
     
-    return probability
+    
+    }
+    return probability;
 }
+
 
 
 function randomMove(){
@@ -765,5 +779,6 @@ window.onload=function(){
     newGame(numRows, numCols, numBombs);
     let end = new Date().getTime();
 
-    // console.log((end-start)/1000);
+    // console.log((end-start)/1000);   
+    
 }
