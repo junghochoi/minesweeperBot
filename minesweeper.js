@@ -19,7 +19,7 @@ var shownBorderTiles;
 var hiddenBorderTiles;
 var winState = false;
 var loseState = false;
-var BOMBLIMIT = 17;
+var BOMBLIMIT = 20;
 
 
 // 
@@ -98,9 +98,7 @@ function numToString(value){
 
 function test(id){
    
-    // console.log(shownBorderTiles);
-    // console.log(hiddenBorderTiles);
-    console.log(isEdge(15,8));
+    console.log(landLocked(Number(getByID("row").value), Number(getByID("col").value)) );
 }
 
 function revealBoard(){
@@ -128,7 +126,7 @@ function revealBoard(){
         
     }
 
-    getByID("container").classList.add("unclickable");
+    getByID("game-container").classList.add("unclickable");
 }
 
 function bombInFirstArea(bRow, bCol, firstCoords){
@@ -186,9 +184,8 @@ function setup(r,c,b, firstCoords){
 function landLocked(r, c){
     
     for(var dir of omniDirection){
-        if (validCoordinate(r+dir.x,c+dir.y) && aiGrid[r+dir.x][c+dir.y]=="-") {
-            // console.log("landlocked function")
-            // console.log(aiGrid[r+dir.x][c+dir.y]);
+        if (validCoordinate(r+dir.x,c+dir.y) && (aiGrid[r+dir.x][c+dir.y]=="-" || aiGrid[r+dir.x][c+dir.y]=="B")) {
+    
             return false;
         }
     }
@@ -288,7 +285,7 @@ function clickEvent(td, which){
             } else if (game[r][c].value == "B"){
                 getByID(r+"_"+c).classList.add("redbomb");
                 loseState = true;
-                // console.log(bombCoords);
+
                 revealBoard();
                 break;
             } else if (game[r][c].value == 0){
@@ -339,7 +336,7 @@ function clickEvent(td, which){
 function newGame(numRows, numCols, numBombs){
 
     
-    var gameContainer = document.getElementById("container");
+    var gameContainer = document.getElementById("game-container");
     aiGrid = new Array(numRows);
     shownBorderTiles = new Set();
     hiddenBorderTiles = new Set();
@@ -373,7 +370,26 @@ function newGame(numRows, numCols, numBombs){
                 if (firstClick){
 
                     game = setup(numRows, numCols, numBombs, {x: xCoord, y:yCoord});
+                    // game = [
+                    //     ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "F", 2, 0, 0, 0, 0, 0, 1, "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"],
+                    //     ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "F", 3, 0, 0, 0, 0, 1, 2, "-", "-", "-", "-", "-", "-", "-", "-", "-", "-" ,"-" ,"-"],
+                    //     [ "-", "-", "-", "-", "-", "-" ,"-" ,"-" ,"-" ,"-", "F", 2, 0, 0 ,0 ,0 ,2, "F", "-", "-" ,"-" ,"-", "-", "-" ,"-", "-", "-", "-", "-", "-"],
+                    //     [ "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", 3, 1, 0, 1, 1, 1, 2, "F", "F", 2, 1, 2, "-", "-", "-", "-", "-", "-", "-", "-"],
+                    //     ["-", "-", "-", 4, 2, 3, "F", "-", "-", "-", 3, 1, 0, 1, "F", 1, 1, 2, 2, 1, 1, 2, "-", "-", "-", "-", "-", "-", "-", "-"],
+                    //     ["-", "-", "-", 2, 1, 2, "F", 3, 3, "F", "F", 2, 1, 2, 1, 1, 0, 0, 0, 0, 1, "F", 4, "-", "-", "-", "-", "-", "-", "-"],
+                    //     ["-", 2, 2, "F", 1, 1, 1, 1, 1, 2, 3, 3, "F", 1, 0, 0, 0, 0, 0, 0, 1, 2, "F", 2, 1, 2, 2, "-", "-", "-"],
+                    //     ["-", 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, "F", 2, 1, 0, 0, 1, 1, 1, 0, 0, 1, 2, 2, 1, 1, "F", 3, "-", "-"],
+                    //     ["-", 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 0, 0, 0, 1, "F", 1, 0, 0, 0, 1, "F", 1, 1, 2, 4, "-", "-"],
+                    //     ["-", 2, 1, 1, 1, 0, 0, 0, 1, "F", 2, 1, 0, 0, 1, 1, 3, 2, 2, 0 ,0 ,0 ,1 ,1, 1, 0, 1, "F", "-", "-"],
+                    //     ["-", 3, 3, "F", 1, 0, 0, 0, 2, 3, "F", 2, 2, 1, 3 ,"F" ,3 ,"F" ,1 ,0, 0, 0, 0, 0, 1, 1, 2, 2, "-", "-"],
+                    //     [ "-", "F", "F", 4, 2, 0, 0, 1, 2, "F", 3, "F", 3, "F" ,5 ,"F" ,4, ,2, 2, 0, 0, 0, 0, 0 ,1, "F", 1, 1, "-", "-"],
+                    //     ["-", "F", "F", "F", 1, 0, 0, 2, "F", 3, 3, 2, 4, "F", "F", 3, 3 ,"F", 2, 0, 0, 0, 1, 1, 2, 1 ,1, 2, ""-"", ""-""],
+                    //     [3, "F", 4, 2, 1, 0, 0, 2, "F", 2, 1 ,"F" ,2, 3, "F", 2, 3, "F", 4, 2, 3, 3, 3, "F", 1, 0, 0, 2, "-", "-"],
+                    //     [ "-", 2, 1, 1, 1, 2, 1, 2, 1, 1, 1 ,1 ,1 ,1 ,2, 2, 3, "F" ,5, "F", "F" ,"F", "F", 2 ,2 ,1, 2 ,2, "-", "-"],
+                    //     ["-", 1, 0, 1, "F", 2, "F", 1, 0, 0, 0, 0, 0, 0, 1, "F", 2, 2, "F", "F", "F", 4, 2, 1, 1, "F", 2, "F", "-", "-"],
+                    // ]
                     
+                    // hiddenBorderTiles = new Set(["12_28", "13_28", "11_28", "14_28", "15_28", "2_19", "2_18", "2_20", "2_21", "4_22", "3_22", "2_22", "1_18", "0_18", "5_23", "4_23", "5_24", "10_28", "3_9", "2_9", "4_9", "9_0", "8_0", "10_0", "7_0", "6_0", "5_25", "5_26", "6_27", "5_27", "9_28", "5_2", "4_2", "4_7", "4_8", "5_1", "5_0", "8_28", "7_28", "6_28", "11_0", "3_4", "3_3", "3_5", "3_2", "3_6", "14_0", "15_0", "12_0"]);
                     
                 }
                     
@@ -415,20 +431,6 @@ function freeSquaresAround(row, col){
 
 function printShownBorders(){
  
-    // var array = new Array();
-    // for(var id of shownBorderTiles){
-    //     let x = Number(id.split("_")[0]);
-    //     let y = Number(id.split("_")[1]);
-        
-    //     array.push(getByID(id))
-    // }
-    // console.log(array);
-
-    // for (id of shownBorderTiles){
-    //     let x = Number(id.split("_")[0]);
-    //     let y = Number(id.split("_")[1]);
-    //     if (landLocked(x,y)) console.log(getByID(id));
-    // }
 
     var answer = new Array();
     for (var id of hiddenBorderTiles){
@@ -437,27 +439,30 @@ function printShownBorders(){
     return answer;
 }
 function makeMove(){
+    console.clear();
+    
     if (winState || loseState){
         alert("Game is Over. Press New Game");
         return;
     }
-    console.clear();
+
+    
+
+
     if (firstClick){
         leftClickTile("8_15");
         return;
     }
 
-    // printShownBorders();
-    // let tilesToInspect = shownBorderTiles.values();
+
 
     var tilesToInspect = new Array();
     for (var i = 0; i < aiGrid.length; i++){
         for (var j = 0; j < aiGrid[i].length; j++){
-            if (aiGrid[i][j] > 0 &&  aiGrid[i][j] <= 8 && !landLocked(i,j))
+            if (isNumber(i,j) && !landLocked(i,j))
                 tilesToInspect.push(i+"_"+j);
         }
     }
-
 
 
     var success = false;
@@ -469,13 +474,14 @@ function makeMove(){
         var tileNum = aiGrid[row][col];
         var flagNum = flagsAround(row, col);
         var freeSpacesArr = freeSquaresAround(row, col);
-
+        // 
         // Guarenteed Bombs
         if (tileNum-flagNum == freeSpacesArr.length && tileNum-flagNum != 0){
 
             
             for(var clickTile of freeSpacesArr){
                 var id = clickTile.row+"_"+clickTile.col;
+               
                 rightClickTile(id);
 
             }
@@ -487,8 +493,9 @@ function makeMove(){
             
             for(var clickTile of freeSpacesArr){
                 var id = clickTile.row+"_"+clickTile.col;
+               
                 leftClickTile(id);
- 
+                
             }
             success= true;
             // return;
@@ -498,47 +505,47 @@ function makeMove(){
 
 
     if (success){
-        console.log("success");
+        console.log("Success - fundamental rules can be applied");
     } else{
-        console.log("fail");
+        console.log("Failure - fundamental rules not applied");
 
         var probability = findProabilities();
         
 
         if (probability == null){
+            console.log("Computation Time Too Long: Making random move");
+           
             randomMove();
-            console.log("random Move Made")
+           
             return;
         }
         var minBombs = Math.min(...Object.values(probability)); 
         if (minBombs == Infinity){
             for(var element of document.getElementsByClassName("blank")){
+               
                 leftClickTile(element.id);
             }
         } else{
-            console.log(probability["total"]);
+            // console.log(probability["total"]);
             console.log("Probability: " + minBombs +"/" +probability["total"]);
             for (var id in probability){
                 if (id == "total") continue;
                 if (probability[id] == minBombs){
                     
-    
+                   
                     leftClickTile(id);
                     if (minBombs != 0) break;
                 }
             }
         }
 
-
-      
-
-        
     }
-
+    // console.log(printTable(aiGrid));
     if (document.getElementsByClassName("blank").length == 0) {
         alert("You Win");
         winState = true;
     }
+
 }
 
 
@@ -684,35 +691,41 @@ function tankSolver(section){
     return solutions;
     
 }
-/*
-Copy and Paste if it does not work
-function addConnected(section, hiddenBorders, row, col){
-    section.push(row+"_"+col);
 
-    for (var dir of omniDirection){
-        var newRow = row + dir.x;
-        var newCol = col + dir.y;
-        var newTD = newRow+"_"+newCol;
-
-        if (hiddenBorders.includes(newTD) && !section.includes(newTD)){
-            addConnected(section, hiddenBorders, newRow, newCol)
-        }
-
-    }
-    
-}
-*/
 
 function isNumber(i,j){
-    return aiGrid[i][j]>0 && aiGrid[i][j]<=8 || aiGrid[i][j] == "F";
+    return aiGrid[i][j]>0 && aiGrid[i][j]<=8;
+}
+function isFlag(){
+    return  aiGrid[i][j] == "F";
 }
 function isEdge(i,j){
 
     return i==0 || i == row || j==0 || j==col;  
 }
 
+
+secondBorderCells = [
+    {x: 0, y:2},
+    {x: 1, y: 2},
+    {x: 2, y: 2},
+    {x: 2, y: 1},
+    {x: 2, y:0},
+    {x:2, y:-1},
+    {x: 2, y:-2},
+    {x: 1, y:-2},
+    {x: 0, y:-2},
+    {x: -1, y:-2},
+    {x: -2, y:-2},
+    {x: -2, y:-1},
+    {x: -2, y:0},
+    {x: -2, y:1},
+    {x:-2, y:2},
+    {x: -1, y:2}
+]
 function addConnected(section, hiddenBorders, row, col){
     section.push(row+"_"+col);
+    var foundClose = false;
 
     for (var dir of omniDirection){
         var newRow = row + dir.x;
@@ -721,13 +734,27 @@ function addConnected(section, hiddenBorders, row, col){
 
         if (!validCoordinate(newRow, newCol)) continue;
         if (hiddenBorders.includes(newTD) && !section.includes(newTD)){
+            foundClose = true;
             addConnected(section, hiddenBorders, newRow, newCol);
         }
-        if (isNumber(newRow, newCol) && hiddenBorders.includes((newRow+dir.x)+"_"+(newCol+dir.y)) && isEdge(newRow, newCol) && !section.includes((newRow+dir.x)+"_"+(newCol+dir.y))){
-            addConnected(section, hiddenBorders, newRow+dir.x,  newCol + dir.y);
-        }
-
+       
     }
+
+
+    for (var sdir of secondBorderCells){
+        var nextDegreeRow = row+sdir.x;
+        var nextDegreeCol = col+sdir.y;
+        var nextDegreeTD = nextDegreeRow+"_"+nextDegreeCol;
+        if (!validCoordinate(nextDegreeRow, nextDegreeCol)) continue;
+        // if (!isNumber(nextDegreeRow,nextDegreeCol)) continue;
+        if (hiddenBorders.includes(nextDegreeTD) && !section.includes(nextDegreeTD)){
+            addConnected(section, hiddenBorders, nextDegreeRow, nextDegreeCol);
+            
+        }
+    }
+
+
+    
     
 }
 
@@ -760,39 +787,43 @@ function sectionDivide(hiddenBorders){
 }
 function findProabilities(){
     var sections;
-    // if (document.getElementsByClassName("blank") <= BOMBLIMIT){
-    //     sections = new Array();
-    //     for (var tile of document.getElementsByClassName("bank")){
-    //         sections.push(tile.id);
-    //     }
-    // } else{
-    //     sections = sectionDivide(Array.from(hiddenBorderTiles));
-    //     sections.sort(function(a,b){
-    //         return a.length - b.length;
-    //     });
-    // }
+    if (document.getElementsByClassName("blank") <= BOMBLIMIT){
+        sections = new Array();
+        for (var tile of document.getElementsByClassName("blank")){
+            sections.push(tile.id);
+        }
+    } else{
+        sections = sectionDivide(Array.from(hiddenBorderTiles));
+        sections.sort(function(a,b){
+            return a.length - b.length;
+        });
+    }
 
-    sections = sectionDivide(Array.from(hiddenBorderTiles));
-    sections.sort(function(a,b){
-        return a.length - b.length;
-    });
+
+    var computationString = "Computations: "
+    for (var i = 0; i <  sections.length; i++){
+        if (i == sections.length-1)
+            computationString += "2^" + sections[i].length;
+        else 
+            computationString+= "2^" + sections[i].length + " + ";
+    }
+
     
-    console.log(sections);
+    console.log(computationString);
     probability = {}
     probability["total"] = 0;
-
+    let start = new Date().getTime();
     for (var sec of sections){
         if (sec.length > 22) return null;
         for (tileid of sec){
             probability[tileid] = 0;
         }
-        console.log(sec);
-        let start = new Date().getTime();
+
+        
         var partialSolution = tankSolver(sec.clone());
         probability["total"] += partialSolution.length;
-        // console.log(partialSolution);
-        let end = new Date().getTime();
-        console.log((end-start)/1000);
+
+        
 
 
         for (var solutionBombs of partialSolution){
@@ -803,13 +834,15 @@ function findProabilities(){
         
         for (var id in probability){
             if (probability[id] == 0){
-                console.log("guarenteed free space found");
+   
                 return probability;
             } 
         }
     
     
     }
+    let end = new Date().getTime();
+    console.log("Time Elapsed: " + (end-start)/1000 + " seconds");
     return probability;
 }
 
@@ -830,8 +863,8 @@ function randomMove(){
 
 function start(){
     
-    clear(getByID("container"));
-    getByID("container").classList.remove("unclickable");
+    clear(getByID("game-container"));
+    getByID("game-container").classList.remove("unclickable");
     row = null;
     col = null;
     bombs = null;

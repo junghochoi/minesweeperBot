@@ -1,14 +1,20 @@
-#hello{
-    background-image: url("sprites/blank.jpg");
-    background-repeat: cover;
-}
+
 
 .unclickable{
     pointer-events:  none;
 }
+.game{
+    margin-top: 25px;
+    text-align: center;
+}
+/* Paragraph Stuff */
 
+.readme{
+    text-align: center;
+    margin: 25px 20%;
+}
 
-
+/* Game stuff */
 .blank{
     background-image: url("sprites/blank.jpg");
     background-size: cover;
@@ -74,21 +80,21 @@
 
 
 
+
+
 table{
     border-collapse: collapse;
-    border:1px black;
-    margin: 0 auto;
+    margin: 5px auto;;
     border: 5px solid black;
-
 }
 
 td{
+
     border: 1px solid #ccc;
     background-color: #ccc;
     width: 25px; 
     height: 25px;
     font-size: 8px;
-    text-align: center;
 }
 
 #ai:active{

@@ -6,7 +6,9 @@
     <title>Minesweeper Bot</title>
     <script src="minesweeper.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
 </head>
 
 <body>
@@ -14,16 +16,33 @@
 
     <!-- <button id="reveal" onclick="test()">Reveal</button>
     <button id="print" onclick="printShownBorders()">Print</button> -->
-    <button id="newgame" onclick="start()">New game</button>
-    <button id="ai" onclick="makeMove()">Make Move</button>
-    <button id="print" onclick="test()">Print</button>
-    <!-- <button id="newgame" onclick="rightclicker()">New Game</button>
-    <div id="hello" onmousedown="test()">Hello</div> -->
-    <div id="container">
     
+
+    <div class="container readme">
+        <h1>Minesweeper AI</h1>
+       
+        <h3> </h3>
         
-        
+        <p>
+            The AI implemented into this minesweeper game makes decisions based on pure logic and probability; there is no learning invovled. The AI first analyzes the board for any tthat follow the very basic patterns explained <a href="http://www.minesweeper.info/wiki/Strategy#Patterns">here</a>. Sometimes, these basic patterns don't appear in the grid. When the basic patterns rule fails, the AI resorts to probability to find the next safe spaces and mines. It enumerates all possible bomb configurations in the board, and the tile with the lowest proabilities are clicked on. By clicking on the "Make Move" button, the AI will attempt to find safe spaces to select. Pressing F12 will reveal the browser console. Here you can see the behind the scenes. This AI isn't perfect, when computation times are too long, it is better off to make a random move in hopes that it provides more information. In the end, Minesweeper is a game of luck.
+        </p>
     </div>
+    <div class="container">
+
+        
+
+
+        <div class="game">
+            <div>
+                <button id="newgame" onclick="start()">New game</button>
+                <button id="ai" onclick="makeMove()">Make Move</button>
+            </div>
+
+            <div id="game-container"> </div>
+        </div>
+       
+    </div>
+    
 </body>
 
 </html>
